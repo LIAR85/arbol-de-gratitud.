@@ -40,6 +40,15 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 .admin-actions .primary{margin:0}.admin-actions .secondary{border-radius:100px}
 .admin-error{min-height:20px;color:#a03e4d!important;font:13px system-ui,sans-serif!important}
 @media(max-width:420px){.admin-trigger{bottom:max(5px,env(safe-area-inset-bottom));right:5px}}
+
+/* Contadores discretos del modo proyección */
+.project-stats{position:absolute;right:17px;bottom:14px;z-index:2;display:none;align-items:center;gap:8px;padding:7px 11px;border:1px solid #ecdfd5;border-radius:999px;background:#fffcf6e8;color:#93796f;font:500 11px system-ui,sans-serif;letter-spacing:.01em;box-shadow:0 3px 10px #7758490b;pointer-events:none}
+.project-stats .mini-leaf{color:#aa8183;font-size:16px;line-height:1}
+.project-stats b{font-weight:700;color:#806b65}
+.project-stats .stat-separator{color:#d8c6bb}
+.project .project-stats{display:flex}
+.project .tree-caption{padding-bottom:42px}
+@media(max-width:420px){.project-stats{right:10px;bottom:8px;font-size:10px;padding:6px 9px;gap:6px}}
 </style>
 </head>
 <body>
@@ -48,7 +57,7 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 <main>
 <section class="hero"><div class="kicker">UN MOMENTO PARA DAR GRACIAS</div><h1>Nuestro árbol de <em>gratitud</em></h1><p>Cada agradecimiento es una hoja que florece. Juntas hacemos visible todo lo bueno que Dios ha hecho.</p></section>
 <div class="layout">
-<section class="tree-card" aria-label="Árbol interactivo de gratitud"><div class="tree-top"><span>UN ÁRBOL, MUCHAS BENDICIONES</span><span class="counter" id="counter" aria-live="polite">0 HOJAS</span></div><div class="tree-stage"><svg id="tree" viewBox="0 0 600 540" role="img" aria-label="Árbol con copa frondosa, tronco, ramas y hojas de gratitud"></svg></div><div class="tree-caption" id="treeHint" aria-live="polite">Tu agradecimiento puede ser la primera hoja ♡</div></section>
+<section class="tree-card" aria-label="Árbol interactivo de gratitud"><div class="tree-top"><span>UN ÁRBOL, MUCHAS BENDICIONES</span><span class="counter" id="counter" aria-live="polite">0 HOJAS</span></div><div class="tree-stage"><svg id="tree" viewBox="0 0 600 540" role="img" aria-label="Árbol con copa frondosa, tronco, ramas y hojas de gratitud"></svg></div><div class="tree-caption" id="treeHint" aria-live="polite">Tu agradecimiento puede ser la primera hoja ♡</div><div class="project-stats" aria-live="polite" aria-label="Estado de lectura de las hojas"><span class="mini-leaf" aria-hidden="true">❧</span><span>Creadas <b id="statCreated">0</b></span><span class="stat-separator">·</span><span>Vistas <b id="statViewed">0</b></span></div></section>
 <div class="side"><section class="panel"><div class="kicker">UN MOMENTO PARA EL CORAZÓN</div><div class="symbol">♡</div><h2>¿Por qué le das <em>gracias a Dios</em> hoy?</h2><p>Por una persona, una respuesta, una nueva oportunidad o un pequeño milagro cotidiano.</p><button class="primary" id="writeBtn" type="button">♡ &nbsp; Escribir mi agradecimiento</button><div class="note">Tu mensaje será anónimo</div></section><section class="verse"><p>“Den gracias a Dios en toda situación.”</p><small>1 TESALONICENSES 5:18</small></section></div>
 </div>
 <footer>CRECIENDO JUNTAS EN GRATITUD · FRIENDS GIVING 2026<div class="disclaimer">Vista local: cada navegador guarda sus propios mensajes. Para compartir el mismo árbol entre celulares es necesaria la sincronización en tiempo real.</div></footer>
@@ -79,14 +88,29 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 const svg=document.getElementById('tree'),NS='http://www.w3.org/2000/svg',key='friends-giving-arbol-local-v1',stage=document.querySelector('.tree-stage');
 const settings=window.GRATITUD_CONFIG||{};
 const configured=Boolean(/^https:\/\/[^ ]+\.supabase\.co\/?$/.test(settings.url||'') && /^sb_publishable_|^eyJ/.test(settings.publishableKey||''));
-let client=null, messages=[], knownIds=new Set(), loading=false;
+let client=null, messages=[], messageKeys=[], knownIds=new Set(), loading=false;
+const viewedStorageKey='friends-giving-viewed-projection-v1';
+let viewed=new Set();
+try{const saved=JSON.parse(localStorage.getItem(viewedStorageKey)||'[]');if(Array.isArray(saved))viewed=new Set(saved.filter(x=>typeof x==='string').slice(-500))}catch(e){}
+function messageKey(row){return String(row.id)+':'+String(row.creado_en)}
+function updateViewStats(){
+ const total=messages.length;
+ document.getElementById('statCreated').textContent=String(total);
+ document.getElementById('statViewed').textContent=String(messageKeys.filter(k=>viewed.has(k)).length);
+}
+function markViewed(id){
+ if(!document.body.classList.contains('project')||viewed.has(id))return;
+ viewed.add(id);
+ try{localStorage.setItem(viewedStorageKey,JSON.stringify([...viewed].slice(-500)))}catch(e){}
+ draw();
+}
 const note=document.querySelector('.disclaimer');
 if(configured && window.supabase){
   client=window.supabase.createClient(settings.url,settings.publishableKey);
   note.textContent='Conectado a Supabase: los agradecimientos son visibles para todas las personas con esta liga.';
 }else{
   note.textContent='Modo demostración: para sincronizar entre celulares configura Supabase en config.js.';
-  try{const saved=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(saved))messages=saved.filter(v=>typeof v==='string').slice(-150)}catch(e){}
+  try{const saved=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(saved)){messages=saved.filter(v=>typeof v==='string').slice(-150);messageKeys=messages.map((m,i)=>'local:'+i+':'+m)}}catch(e){}
 }
 async function refresh(){
  if(!client||loading)return;
@@ -95,6 +119,7 @@ async function refresh(){
  loading=false;
  if(error){note.textContent='No se pudo cargar Supabase: '+error.message;return}
  messages=(data||[]).map(r=>r.mensaje);
+ messageKeys=(data||[]).map(messageKey);
  knownIds=new Set((data||[]).map(r=>r.id));
  draw();
 }
@@ -102,12 +127,12 @@ if(client){
  refresh();
  client.channel('arbol-gratitud-evento').on('postgres_changes',{event:'UPDATE',schema:'public',table:'arbol_control'},()=>{
    // El administrador limpió la tabla: actualizar todas las pantallas.
-   messages=[];knownIds.clear();draw();refresh();
+   messages=[];messageKeys=[];knownIds.clear();draw();refresh();
  }).on('postgres_changes',{event:'INSERT',schema:'public',table:'agradecimientos'},payload=>{
    if(knownIds.has(payload.new.id))return;
    knownIds.add(payload.new.id);
-   messages.push(payload.new.mensaje);
-   if(messages.length>150)messages=messages.slice(-150);
+   messages.push(payload.new.mensaje);messageKeys.push(messageKey(payload.new));
+   if(messages.length>150){messages=messages.slice(-150);messageKeys=messageKeys.slice(-150)}
    draw();
  }).subscribe(status=>{if(status==='SUBSCRIBED')refresh();});
 }
@@ -146,14 +171,17 @@ const leaves=make('g');
 messages.forEach((msg,i)=>{
 const cluster=clusters[(i*7)%clusters.length],a=seeded(i+81)*Math.PI*2,r=Math.sqrt(seeded(i+173))*.7;
 const x=cluster[0]+Math.cos(a)*cluster[2]*r,y=cluster[1]+Math.sin(a)*cluster[3]*r;
-const rot=Math.round(seeded(i+102)*100-50),g=make('g',{transform:'translate('+x.toFixed(1)+' '+y.toFixed(1)+') rotate('+rot+')',role:'button',tabindex:0,'aria-label':'Leer agradecimiento '+(i+1),class:'leaf-hit'},leaves);
+const id=messageKeys[i]||('fallback:'+i+':'+msg);
+const alreadyViewed=viewed.has(id)&&document.body.classList.contains('project');
+const rot=Math.round(seeded(i+102)*100-50),g=make('g',{transform:'translate('+x.toFixed(1)+' '+y.toFixed(1)+') rotate('+rot+')',role:'button',tabindex:0,'aria-label':'Leer agradecimiento '+(i+1)+(alreadyViewed?' (ya visto)':''),class:'leaf-hit'},leaves);
 make('circle',{r:26,fill:'transparent'},g);
-make('path',{class:'mainleaf',d:'M0 20 C-33 -2 -22 -32 0 -36 C24 -28 30 0 0 20 Z',fill:PALETTE[(i*3+1)%PALETTE.length],stroke:'#fffaf5','stroke-width':2},g);
+make('path',{class:'mainleaf',d:'M0 20 C-33 -2 -22 -32 0 -36 C24 -28 30 0 0 20 Z',fill:alreadyViewed?'#8a9f91':PALETTE[(i*3+1)%PALETTE.length],stroke:'#fffaf5','stroke-width':2},g);
 make('path',{d:'M0 17 Q-2 -7 0 -28',fill:'none',stroke:'#fff8f0','stroke-width':1.5,'pointer-events':'none'},g);
-const open=()=>{document.getElementById('quote').textContent='“'+msg+'”';showModal('readModal')};
+const open=()=>{markViewed(id);document.getElementById('quote').textContent='“'+msg+'”';showModal('readModal')};
 g.addEventListener('click',open);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
 });
 document.getElementById('counter').textContent=messages.length+' '+(messages.length===1?'HOJA':'HOJAS');
+updateViewStats();
 document.getElementById('treeHint').textContent=messages.length?'Toca una hoja para leer su agradecimiento ♡':'Tu agradecimiento puede ser la primera hoja ♡';
 }
 function showModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';if(id==='formModal')setTimeout(()=>document.getElementById('message').focus({preventScroll:true}),80)}
@@ -177,7 +205,7 @@ if(client){
  }
  await refresh();
 }else{
- messages.push(value);if(messages.length>150)messages=messages.slice(-150);
+ messages.push(value);messageKeys.push('local:'+Date.now()+':'+value);if(messages.length>150){messages=messages.slice(-150);messageKeys=messageKeys.slice(-150)}
  try{localStorage.setItem(key,JSON.stringify(messages))}catch(e){}
  draw();
 }
@@ -187,7 +215,7 @@ closeModals();document.getElementById('treeHint').textContent='¡Gracias! Tu hoj
 stage.scrollIntoView({behavior:'smooth',block:'center'});
 });
 const projectBtn=document.getElementById('projectBtn');
-projectBtn.addEventListener('click',()=>{const on=document.body.classList.toggle('project');projectBtn.textContent=on?'← Salir':'▣ Proyectar';projectBtn.setAttribute('aria-pressed',String(on));if(on)window.scrollTo({top:0,behavior:'smooth'})});
+projectBtn.addEventListener('click',()=>{const on=document.body.classList.toggle('project');projectBtn.textContent=on?'← Salir':'▣ Proyectar';projectBtn.setAttribute('aria-pressed',String(on));draw();if(on)window.scrollTo({top:0,behavior:'smooth'})});
 // Actualización de respaldo: cubre reconexiones y dispositivos suspendidos.
 if(client){
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
@@ -213,7 +241,7 @@ document.getElementById('adminExecute').addEventListener('click',async()=>{
  try{
   const {data,error}=await client.rpc('limpiar_arbol_v2');
   if(error)throw error;
-  messages=[];knownIds.clear();draw();await refresh();
+  messages=[];messageKeys=[];knownIds.clear();draw();await refresh();
   closeModals();resetAdmin();
   document.getElementById('treeHint').textContent='El árbol quedó limpio y listo para comenzar ♡';
   alert('Árbol limpio. Se eliminaron '+data+' agradecimientos.');
