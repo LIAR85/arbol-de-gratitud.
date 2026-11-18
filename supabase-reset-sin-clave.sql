@@ -1,5 +1,5 @@
 -- ÁRBOL DE GRATITUD: limpieza con dos confirmaciones, SIN contraseña.
--- Ejecutar UNA SOLA VEZ en Supabase > SQL Editor > New query > Run.
+-- Ejecutar o VOLVER A EJECUTAR en Supabase > SQL Editor > New query > Run.
 -- ADVERTENCIA: cualquier persona que tenga el enlace puede invocar esta función
 -- y borrar todos los agradecimientos, incluso sin usar el botón.
 
@@ -44,10 +44,10 @@ set search_path = ''
 as $fn$
 declare eliminadas integer;
 begin
-  -- Supabase puede exigir WHERE para operaciones DELETE.
-  -- El ID de esta tabla es identity bigint y sus valores son positivos.
-  delete from public.agradecimientos where id > 0;
-  get diagnostics eliminadas = row_count;
+  -- TRUNCATE no utiliza DELETE, por lo que evita la protección que exige WHERE.
+  -- Conserva la tabla, sus políticas RLS y su configuración Realtime.
+  select count(*)::integer into eliminadas from public.agradecimientos;
+  truncate table public.agradecimientos restart identity;
   update public.arbol_control
     set revision = revision + 1, actualizado_en = now()
     where id = true;
