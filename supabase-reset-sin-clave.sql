@@ -44,7 +44,9 @@ set search_path = ''
 as $fn$
 declare eliminadas integer;
 begin
-  delete from public.agradecimientos;
+  -- Supabase puede exigir WHERE para operaciones DELETE.
+  -- El ID de esta tabla es identity bigint y sus valores son positivos.
+  delete from public.agradecimientos where id > 0;
   get diagnostics eliminadas = row_count;
   update public.arbol_control
     set revision = revision + 1, actualizado_en = now()
