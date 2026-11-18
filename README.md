@@ -43,3 +43,11 @@ No es necesario ejecutar el anterior `supabase-admin-setup.sql` para esta versi�
 
 ### Si aparece «DELETE requires a WHERE clause»
 La versión nueva utiliza la función `public.limpiar_arbol_v2()` para evitar una versión antigua de la función SQL que ejecutaba DELETE. Debes volver a ejecutar **todo** [supabase-reset-sin-clave.sql](./supabase-reset-sin-clave.sql) en el SQL Editor y asegurarte de que Netlify publique el commit actualizado. Puedes comprobar la función sin borrar ningún dato con `select pg_get_functiondef('public.limpiar_arbol_v2()'::regprocedure);` y confirmar que contiene `truncate table public.agradecimientos`. Si la función no existe, el script no se ejecutó correctamente.
+
+## Modo Proyectar: seguimiento de notas leídas
+
+- Al abrir una hoja **dentro del modo Proyectar**, su color cambia a **verde salvia** para distinguirla de las pendientes. Al tocarla de nuevo, sigue siendo posible leerla.
+- Aparece una pequeña etiqueta con forma de hoja en la esquina inferior derecha del árbol, indicando **Creadas** (mensajes cargados) y **Vistas** (hojas abiertas en esa pantalla).
+- El estado de lectura se guarda **en el navegador que proyecta**, no en Supabase. Así los teléfonos de las participantes no alteran el contador de la persona que dirige la reunión.
+- Las hojas se identifican con el ID y la fecha de creación de Supabase, por lo que el seguimiento persiste al actualizar la página y no se confunde con hojas nuevas después de vaciar la tabla.
+- El total visible muestra los últimos 150 agradecimientos, tal como la aplicación ya los carga. Para el evento de alrededor de 20 personas, es suficiente.
