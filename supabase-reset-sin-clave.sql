@@ -1,4 +1,5 @@
--- ÁRBOL DE GRATITUD: limpieza con dos confirmaciones, SIN contraseña.
+-- ÁRBOL DE GRATITUD v2: limpieza con dos confirmaciones, SIN contraseña.
+-- Se utiliza el nombre NUEVO limpiar_arbol_v2() para evitar ejecutar una función antigua almacenada.
 -- Ejecutar o VOLVER A EJECUTAR en Supabase > SQL Editor > New query > Run.
 -- ADVERTENCIA: cualquier persona que tenga el enlace puede invocar esta función
 -- y borrar todos los agradecimientos, incluso sin usar el botón.
@@ -36,7 +37,7 @@ begin
   end if;
 end $$;
 
-create or replace function public.limpiar_arbol_confirmado()
+create or replace function public.limpiar_arbol_v2()
 returns integer
 language plpgsql
 security definer
@@ -55,5 +56,9 @@ begin
 end;
 $fn$;
 
-revoke all on function public.limpiar_arbol_confirmado() from public, anon, authenticated;
-grant execute on function public.limpiar_arbol_confirmado() to anon, authenticated;
+revoke all on function public.limpiar_arbol_v2() from public, anon, authenticated;
+grant execute on function public.limpiar_arbol_v2() to anon, authenticated;
+
+-- Comprobación opcional de la instalación, SIN borrar datos:
+-- select pg_get_functiondef('public.limpiar_arbol_v2()'::regprocedure);
+-- El resultado debe contener: TRUNCATE TABLE public.agradecimientos.
