@@ -44,11 +44,43 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 </main>
 <div class="modal" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle"><div class="dialog"><button class="close" type="button" data-close aria-label="Cerrar">×</button><div class="kicker">TU HOJA DE GRATITUD</div><h2 id="formTitle">Hoy le doy gracias <em>a Dios por…</em></h2><p>Comparte lo que hay en tu corazón. Nadie verá tu nombre.</p><form id="form"><textarea id="message" maxlength="220" minlength="3" required placeholder="Hoy doy gracias a Dios por…"></textarea><div class="charcount" id="limit">0 / 220</div><button class="primary" type="submit">Colocar mi hoja en el árbol ♡</button></form></div></div>
 <div class="modal" id="readModal" role="dialog" aria-modal="true" aria-labelledby="readTitle"><div class="dialog"><button class="close" type="button" data-close aria-label="Cerrar">×</button><div class="kicker">UNA HOJA DE GRATITUD</div><h2 id="readTitle">❧</h2><p class="quote" id="quote"></p><button type="button" class="primary" data-close>Cerrar</button></div></div>
+<script src="./config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (()=>{
 'use strict';
 const svg=document.getElementById('tree'),NS='http://www.w3.org/2000/svg',key='friends-giving-arbol-local-v1',stage=document.querySelector('.tree-stage');
-let messages=[];try{const saved=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(saved))messages=saved.filter(v=>typeof v==='string').slice(-150)}catch(e){}
+const settings=window.GRATITUD_CONFIG||{};
+const configured=Boolean(/^https:\/\/[^ ]+\.supabase\.co\/?$/.test(settings.url||'') && /^sb_publishable_|^eyJ/.test(settings.publishableKey||''));
+let client=null, messages=[], knownIds=new Set(), loading=false;
+const note=document.querySelector('.disclaimer');
+if(configured && window.supabase){
+  client=window.supabase.createClient(settings.url,settings.publishableKey);
+  note.textContent='Conectado a Supabase: los agradecimientos son visibles para todas las personas con esta liga.';
+}else{
+  note.textContent='Modo demostración: para sincronizar entre celulares configura Supabase en config.js.';
+  try{const saved=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(saved))messages=saved.filter(v=>typeof v==='string').slice(-150)}catch(e){}
+}
+async function refresh(){
+ if(!client||loading)return;
+ loading=true;
+ const {data,error}=await client.from('agradecimientos').select('id,mensaje,creado_en').order('id',{ascending:true}).limit(150);
+ loading=false;
+ if(error){note.textContent='No se pudo cargar Supabase: '+error.message;return}
+ messages=(data||[]).map(r=>r.mensaje);
+ knownIds=new Set((data||[]).map(r=>r.id));
+ draw();
+}
+if(client){
+ refresh();
+ client.channel('arbol-gratitud-evento').on('postgres_changes',{event:'INSERT',schema:'public',table:'agradecimientos'},payload=>{
+   if(knownIds.has(payload.new.id))return;
+   knownIds.add(payload.new.id);
+   messages.push(payload.new.mensaje);
+   if(messages.length>150)messages=messages.slice(-150);
+   draw();
+ }).subscribe(status=>{if(status==='SUBSCRIBED')refresh();});
+}
 const make=(tag,attrs={},parent=svg)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));parent.append(n);return n};
 const PALETTE=['#b8818c','#d49ba2','#dec1a7','#bda588','#c98a92','#ecd0b2','#b6a48f','#e4b6b1'];
 const clusters=[[190,200,74,83],[270,148,87,91],[361,154,92,91],[437,210,75,76],[150,269,71,75],[238,261,105,104],[344,259,109,107],[451,289,75,75],[291,90,72,62]];
@@ -102,12 +134,26 @@ document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModals()});
 const textarea=document.getElementById('message');
 textarea.addEventListener('input',()=>document.getElementById('limit').textContent=textarea.value.length+' / 220');
-document.getElementById('form').addEventListener('submit',e=>{
-e.preventDefault();const value=textarea.value.trim().replace(/\s+/g,' ');if(value.length<3)return;
-messages.push(value);if(messages.length>150)messages=messages.slice(-150);
-try{localStorage.setItem(key,JSON.stringify(messages))}catch(e){}
-textarea.value='';document.getElementById('limit').textContent='0 / 220';closeModals();draw();
-document.getElementById('treeHint').textContent='¡Gracias! Tu hoja ya forma parte del árbol ♡';
+document.getElementById('form').addEventListener('submit',async e=>{
+e.preventDefault();
+const value=textarea.value.trim().replace(/\s+/g,' ');if(value.length<3)return;
+const submit=e.target.querySelector('[type=submit]');
+submit.disabled=true;submit.textContent='Enviando tu hoja…';
+if(client){
+ const {error}=await client.from('agradecimientos').insert({mensaje:value});
+ if(error){
+  alert('No pudimos guardar tu agradecimiento: '+error.message);
+  submit.disabled=false;submit.textContent='Colocar mi hoja en el árbol ♡';return;
+ }
+ await refresh();
+}else{
+ messages.push(value);if(messages.length>150)messages=messages.slice(-150);
+ try{localStorage.setItem(key,JSON.stringify(messages))}catch(e){}
+ draw();
+}
+textarea.value='';document.getElementById('limit').textContent='0 / 220';
+submit.disabled=false;submit.textContent='Colocar mi hoja en el árbol ♡';
+closeModals();document.getElementById('treeHint').textContent='¡Gracias! Tu hoja ya forma parte del árbol ♡';
 stage.scrollIntoView({behavior:'smooth',block:'center'});
 });
 const projectBtn=document.getElementById('projectBtn');
