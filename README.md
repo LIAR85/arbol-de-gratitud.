@@ -35,8 +35,11 @@ El botón ⚙ de la esquina inferior derecha es pequeño y permanece fijo. Al to
 
 ### Activación obligatoria en Supabase (una vez)
 
-Abre [supabase-reset-sin-clave.sql](./supabase-reset-sin-clave.sql), copia todo su contenido y ejecútalo desde **Supabase Dashboard → SQL Editor → New query → Run**. La app llama a `limpiar_arbol_confirmado()`. Sin ese paso, el botón mostrará un error y no borrará los registros.
+Abre [supabase-reset-sin-clave.sql](./supabase-reset-sin-clave.sql), copia todo su contenido y ejecútalo desde **Supabase Dashboard → SQL Editor → New query → Run**. La app llama a `limpiar_arbol_v2()`. Sin ese paso, el botón mostrará un error y no borrará los registros.
 
 **ADVERTENCIA DE SEGURIDAD:** La doble confirmación previene borrados accidentales, **no autoriza al usuario**. Como la función SQL está disponible a usuarios anónimos, **cualquier persona con acceso al sitio puede borrar toda la tabla**, incluso invocándola sin usar el botón. Usa esta configuración solo si aceptas ese riesgo. Para una protección real se necesita autenticación de administrador o un servicio con autorización del lado del servidor.
 
 No es necesario ejecutar el anterior `supabase-admin-setup.sql` para esta versión. Este se conserva solo por historial.
+
+### Si aparece «DELETE requires a WHERE clause»
+La versión nueva utiliza la función `public.limpiar_arbol_v2()` para evitar una versión antigua de la función SQL que ejecutaba DELETE. Debes volver a ejecutar **todo** [supabase-reset-sin-clave.sql](./supabase-reset-sin-clave.sql) en el SQL Editor y asegurarte de que Netlify publique el commit actualizado. Puedes comprobar la función sin borrar ningún dato con `select pg_get_functiondef('public.limpiar_arbol_v2()'::regprocedure);` y confirmar que contiene `truncate table public.agradecimientos`. Si la función no existe, el script no se ejecutó correctamente.
