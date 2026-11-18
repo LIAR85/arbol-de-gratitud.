@@ -24,3 +24,22 @@ La aplicación usa un modo de demostración local con `localStorage`. Puedes abr
 - `index.html`: aplicación responsive con árbol, formulario, modo proyección y sincronización.
 - `config.js`: URL y clave pública de Supabase (se pueden publicar, **nunca** poner aquí claves secretas).
 - `supabase-setup.sql`: tabla, políticas RLS y publicación realtime.
+
+
+## Botón de limpieza administrativa (nuevo)
+
+Hay un botón discreto ⚙ en la esquina inferior derecha de la página. No borra nada sin pasar por **dos confirmaciones** y validar una clave privada en Supabase.
+
+**Configuración obligatoria, una sola vez:**
+
+1. Abre [supabase-admin-setup.sql](./supabase-admin-setup.sql) en GitHub.
+2. Copia su contenido a **Supabase Dashboard → SQL Editor → New query**.
+3. Antes de ejecutarlo, cambia la cadena `REEMPLAZA_ESTA_FRASE_POR_TU_CLAVE_PRIVADA` por **tu clave privada larga** (mínimo 16 caracteres).
+4. Presiona **Run**. Guarda la clave en un lugar seguro. **Nunca la pongas en GitHub, config.js ni en los chats públicos**.
+5. Abre Netlify, pulsa ⚙ → confirma → escribe **BORRAR TODO**, ingresa tu clave y pulsa **Borrar las hojas**.
+
+La función `limpiar_arbol_seguro` ejecuta el DELETE exclusivamente en Supabase después de validar la clave con un hash. Ninguna página pública recibe privilegios directos para borrar registros. Cuando se limpia, la tabla de control emite una actualización en tiempo real para vaciar los árboles abiertos en otros dispositivos. También se sincroniza al volver a la página.
+
+**Aviso:** una clave débil podría ser adivinada, así que utiliza una frase larga y aleatoria. No existe protección anti-fuerza-bruta integrada en esta versión. El icono discreto no es una medida de seguridad por sí mismo.
+
+**No ejecutes el archivo SQL de administrador sin reemplazar la clave de ejemplo.** Si ejecutas de nuevo el SQL con otra clave, cambiarás la clave de administración.
