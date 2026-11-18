@@ -29,6 +29,17 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 @media(max-width:800px){header{padding:16px}.logo{font-size:19px}main{padding:0 13px 26px}.hero{margin:6px 0 22px}.hero h1{font-size:39px}.hero p{font-size:14px;padding:0 14px}.layout{grid-template-columns:1fr;gap:14px}.side{order:0}.tree-card{order:1}.panel{padding:25px 21px 24px}.symbol{width:48px;height:48px;font-size:24px;margin-bottom:12px}.panel h2{font-size:30px;margin:10px 0}.panel h2 br{display:none}.panel p{font-size:14px;line-height:1.5}.panel .primary{margin-top:12px}.panel .note{margin-top:11px}.verse{display:none}.tree-top{padding:17px 17px 0}.tree-caption{padding-bottom:15px;font-size:13px}.project .tree-card{height:calc(100dvh - 75px)}.project .tree-stage{height:calc(100% - 68px)}}
 @media(max-width:420px){.logo{font-size:17px}.logo small{font-size:8px}.secondary{padding:11px 12px;font-size:11px}.hero h1{font-size:35px}.dialog{padding:34px 19px 24px}.modal{align-items:flex-end;padding:0}.dialog{border-radius:24px 24px 0 0;max-height:92dvh;padding-bottom:max(24px,env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* Botón administrativo discreto, accesible desde el margen inferior derecho */
+.admin-trigger{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));right:12px;z-index:4;width:38px;height:38px;display:grid;place-items:center;border:1px solid #ddcdc5;background:#fffdfaeb;color:#a99b94;border-radius:50%;font:17px system-ui,sans-serif;box-shadow:0 2px 10px #4d383112;opacity:.6}
+.admin-trigger:hover,.admin-trigger:focus-visible{opacity:1;color:#895667}
+.admin-step{display:none}.admin-step.active{display:block}
+.admin-warning{background:#fcf0ed;border:1px solid #efdcd6;border-radius:12px;padding:12px;color:#865c57!important;font:14px/1.55 system-ui,sans-serif!important}
+.admin-input{display:block;width:100%;min-height:48px;border:1px solid #e3d2cb;background:#fffaf7;border-radius:11px;padding:12px 14px;font:16px system-ui,sans-serif;margin:10px 0;color:#554842}
+.admin-actions{display:flex;gap:10px;margin-top:20px}.admin-actions button{flex:1;min-width:0}
+.admin-actions .primary{margin:0}.admin-actions .secondary{border-radius:100px}
+.admin-error{min-height:20px;color:#a03e4d!important;font:13px system-ui,sans-serif!important}
+@media(max-width:420px){.admin-trigger{bottom:max(10px,env(safe-area-inset-bottom));right:10px}}
 </style>
 </head>
 <body>
@@ -44,6 +55,27 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 </main>
 <div class="modal" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle"><div class="dialog"><button class="close" type="button" data-close aria-label="Cerrar">×</button><div class="kicker">TU HOJA DE GRATITUD</div><h2 id="formTitle">Hoy le doy gracias <em>a Dios por…</em></h2><p>Comparte lo que hay en tu corazón. Nadie verá tu nombre.</p><form id="form"><textarea id="message" maxlength="220" minlength="3" required placeholder="Hoy doy gracias a Dios por…"></textarea><div class="charcount" id="limit">0 / 220</div><button class="primary" type="submit">Colocar mi hoja en el árbol ♡</button></form></div></div>
 <div class="modal" id="readModal" role="dialog" aria-modal="true" aria-labelledby="readTitle"><div class="dialog"><button class="close" type="button" data-close aria-label="Cerrar">×</button><div class="kicker">UNA HOJA DE GRATITUD</div><h2 id="readTitle">❧</h2><p class="quote" id="quote"></p><button type="button" class="primary" data-close>Cerrar</button></div></div>
+<button class="admin-trigger" type="button" id="adminTrigger" aria-label="Opciones de administrador" title="Administración">⚙</button>
+<div class="modal" id="adminModal" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+<div class="dialog">
+<button class="close" data-close type="button" aria-label="Cerrar">×</button>
+<div class="kicker">ADMINISTRACIÓN</div>
+<div id="adminStep1" class="admin-step active">
+<h2 id="adminTitle">Limpiar <em>el árbol</em></h2>
+<p class="admin-warning">¿Quieres borrar definitivamente TODOS los agradecimientos guardados en Supabase? Esta acción no se puede deshacer.</p>
+<div class="admin-actions"><button type="button" class="secondary" data-close>Cancelar</button><button type="button" class="primary" id="adminContinue">Sí, continuar</button></div>
+</div>
+<div id="adminStep2" class="admin-step">
+<h2>Segunda <em>confirmación</em></h2>
+<p>Para confirmar, escribe <strong>BORRAR TODO</strong> e introduce tu clave privada de administrador.</p>
+<form id="adminForm">
+<label for="adminPhrase">Frase de confirmación</label>
+<input class="admin-input" type="text" id="adminPhrase" autocomplete="off" placeholder="BORRAR TODO" required>
+<label for="adminPassword">Clave de administrador</label>
+<input class="admin-input" type="password" id="adminPassword" autocomplete="off" placeholder="Tu clave privada" required minlength="16">
+<p id="adminError" class="admin-error" aria-live="polite"></p>
+<div class="admin-actions"><button type="button" class="secondary" id="adminBack">Volver</button><button type="submit" class="primary" id="adminExecute">Borrar las hojas</button></div>
+</form></div></div></div>
 <script src="./config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -73,7 +105,10 @@ async function refresh(){
 }
 if(client){
  refresh();
- client.channel('arbol-gratitud-evento').on('postgres_changes',{event:'INSERT',schema:'public',table:'agradecimientos'},payload=>{
+ client.channel('arbol-gratitud-evento').on('postgres_changes',{event:'UPDATE',schema:'public',table:'arbol_control'},()=>{
+   // El administrador limpió la tabla: actualizar todas las pantallas.
+   messages=[];knownIds.clear();draw();refresh();
+ }).on('postgres_changes',{event:'INSERT',schema:'public',table:'agradecimientos'},payload=>{
    if(knownIds.has(payload.new.id))return;
    knownIds.add(payload.new.id);
    messages.push(payload.new.mensaje);
@@ -158,6 +193,52 @@ stage.scrollIntoView({behavior:'smooth',block:'center'});
 });
 const projectBtn=document.getElementById('projectBtn');
 projectBtn.addEventListener('click',()=>{const on=document.body.classList.toggle('project');projectBtn.textContent=on?'← Salir':'▣ Proyectar';projectBtn.setAttribute('aria-pressed',String(on));if(on)window.scrollTo({top:0,behavior:'smooth'})});
+// Actualización de respaldo: cubre reconexiones y dispositivos suspendidos.
+if(client){
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+ window.addEventListener('focus',refresh);
+ setInterval(()=>{if(!document.hidden)refresh()},12000);
+}
+const adminModal=document.getElementById('adminModal');
+const resetAdmin=()=>{
+ document.getElementById('adminStep1').classList.add('active');
+ document.getElementById('adminStep2').classList.remove('active');
+ document.getElementById('adminPhrase').value='';
+ document.getElementById('adminPassword').value='';
+ document.getElementById('adminError').textContent='';
+};
+document.getElementById('adminTrigger').addEventListener('click',()=>{
+ resetAdmin();showModal('adminModal');
+});
+document.getElementById('adminContinue').addEventListener('click',()=>{
+ document.getElementById('adminStep1').classList.remove('active');
+ document.getElementById('adminStep2').classList.add('active');
+ document.getElementById('adminPhrase').focus({preventScroll:true});
+});
+document.getElementById('adminBack').addEventListener('click',resetAdmin);
+document.getElementById('adminForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const phrase=document.getElementById('adminPhrase').value.trim();
+ const pwd=document.getElementById('adminPassword');
+ const errorNode=document.getElementById('adminError');
+ const btn=document.getElementById('adminExecute');
+ if(phrase!=='BORRAR TODO'){errorNode.textContent='Escribe exactamente BORRAR TODO para confirmar.';return}
+ if(!client){errorNode.textContent='El árbol no está conectado a Supabase.';return}
+ if(pwd.value.length<16){errorNode.textContent='La clave debe tener al menos 16 caracteres.';return}
+ btn.disabled=true;btn.textContent='Borrando…';errorNode.textContent='';
+ try{
+  const {data,error}=await client.rpc('limpiar_arbol_seguro',{clave:pwd.value});
+  if(error)throw error;
+  messages=[];knownIds.clear();draw();await refresh();
+  closeModals();resetAdmin();
+  document.getElementById('treeHint').textContent='El árbol quedó limpio y listo para comenzar ♡';
+  alert('Árbol limpio. Se eliminaron '+data+' agradecimientos.');
+ }catch(err){
+  errorNode.textContent=String(err.message||'No se pudo completar la limpieza. Revisa el SQL de administrador y la clave.');
+ }finally{
+  pwd.value='';btn.disabled=false;btn.textContent='Borrar las hojas';
+ }
+});
 draw();
 })();
 </script>
