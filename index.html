@@ -62,20 +62,15 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 <div class="kicker">ADMINISTRACIÓN</div>
 <div id="adminStep1" class="admin-step active">
 <h2 id="adminTitle">Limpiar <em>el árbol</em></h2>
-<p class="admin-warning">¿Quieres borrar definitivamente TODOS los agradecimientos guardados en Supabase? Esta acción no se puede deshacer.</p>
-<div class="admin-actions"><button type="button" class="secondary" data-close>Cancelar</button><button type="button" class="primary" id="adminContinue">Sí, continuar</button></div>
+<p class="admin-warning">Primera confirmación: ¿quieres eliminar todas las hojas guardadas en Supabase? Esta acción no se puede deshacer.</p>
+<div class="admin-actions"><button type="button" class="secondary" data-close>Cancelar</button><button type="button" class="primary" id="adminContinue">Continuar</button></div>
 </div>
 <div id="adminStep2" class="admin-step">
-<h2>Segunda <em>confirmación</em></h2>
-<p>Para confirmar, escribe <strong>BORRAR TODO</strong> e introduce tu clave privada de administrador.</p>
-<form id="adminForm">
-<label for="adminPhrase">Frase de confirmación</label>
-<input class="admin-input" type="text" id="adminPhrase" autocomplete="off" placeholder="BORRAR TODO" required>
-<label for="adminPassword">Clave de administrador</label>
-<input class="admin-input" type="password" id="adminPassword" autocomplete="off" placeholder="Tu clave privada" required minlength="16">
+<h2>¿Estás <em>segura?</em></h2>
+<p class="admin-warning">Segunda y última confirmación. Se borrarán definitivamente TODOS los agradecimientos para todas las participantes.</p>
 <p id="adminError" class="admin-error" aria-live="polite"></p>
-<div class="admin-actions"><button type="button" class="secondary" id="adminBack">Volver</button><button type="submit" class="primary" id="adminExecute">Borrar las hojas</button></div>
-</form></div></div></div>
+<div class="admin-actions"><button type="button" class="secondary" id="adminBack">Cancelar</button><button type="button" class="primary" id="adminExecute">Sí, borrar todas las hojas</button></div>
+</div></div></div>
 <script src="./config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -199,44 +194,33 @@ if(client){
  window.addEventListener('focus',refresh);
  setInterval(()=>{if(!document.hidden)refresh()},12000);
 }
-const adminModal=document.getElementById('adminModal');
 const resetAdmin=()=>{
  document.getElementById('adminStep1').classList.add('active');
  document.getElementById('adminStep2').classList.remove('active');
- document.getElementById('adminPhrase').value='';
- document.getElementById('adminPassword').value='';
  document.getElementById('adminError').textContent='';
 };
-document.getElementById('adminTrigger').addEventListener('click',()=>{
- resetAdmin();showModal('adminModal');
-});
+document.getElementById('adminTrigger').addEventListener('click',()=>{resetAdmin();showModal('adminModal')});
 document.getElementById('adminContinue').addEventListener('click',()=>{
  document.getElementById('adminStep1').classList.remove('active');
  document.getElementById('adminStep2').classList.add('active');
- document.getElementById('adminPhrase').focus({preventScroll:true});
 });
-document.getElementById('adminBack').addEventListener('click',resetAdmin);
-document.getElementById('adminForm').addEventListener('submit',async e=>{
- e.preventDefault();
- const phrase=document.getElementById('adminPhrase').value.trim();
- const pwd=document.getElementById('adminPassword');
+document.getElementById('adminBack').addEventListener('click',()=>{closeModals();resetAdmin()});
+document.getElementById('adminExecute').addEventListener('click',async()=>{
  const errorNode=document.getElementById('adminError');
  const btn=document.getElementById('adminExecute');
- if(phrase!=='BORRAR TODO'){errorNode.textContent='Escribe exactamente BORRAR TODO para confirmar.';return}
  if(!client){errorNode.textContent='El árbol no está conectado a Supabase.';return}
- if(pwd.value.length<16){errorNode.textContent='La clave debe tener al menos 16 caracteres.';return}
  btn.disabled=true;btn.textContent='Borrando…';errorNode.textContent='';
  try{
-  const {data,error}=await client.rpc('limpiar_arbol_seguro',{clave:pwd.value});
+  const {data,error}=await client.rpc('limpiar_arbol_confirmado');
   if(error)throw error;
   messages=[];knownIds.clear();draw();await refresh();
   closeModals();resetAdmin();
   document.getElementById('treeHint').textContent='El árbol quedó limpio y listo para comenzar ♡';
   alert('Árbol limpio. Se eliminaron '+data+' agradecimientos.');
  }catch(err){
-  errorNode.textContent=String(err.message||'No se pudo completar la limpieza. Revisa el SQL de administrador y la clave.');
+  errorNode.textContent=String(err.message||'No se pudo completar la limpieza. Revisa el SQL de configuración.');
  }finally{
-  pwd.value='';btn.disabled=false;btn.textContent='Borrar las hojas';
+  btn.disabled=false;btn.textContent='Sí, borrar todas las hojas';
  }
 });
 draw();
