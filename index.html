@@ -211,14 +211,14 @@ document.getElementById('adminExecute').addEventListener('click',async()=>{
  if(!client){errorNode.textContent='El árbol no está conectado a Supabase.';return}
  btn.disabled=true;btn.textContent='Borrando…';errorNode.textContent='';
  try{
-  const {data,error}=await client.rpc('limpiar_arbol_confirmado');
+  const {data,error}=await client.rpc('limpiar_arbol_v2');
   if(error)throw error;
   messages=[];knownIds.clear();draw();await refresh();
   closeModals();resetAdmin();
   document.getElementById('treeHint').textContent='El árbol quedó limpio y listo para comenzar ♡';
   alert('Árbol limpio. Se eliminaron '+data+' agradecimientos.');
  }catch(err){
-  errorNode.textContent=String(err.message||'No se pudo completar la limpieza. Revisa el SQL de configuración.');
+  errorNode.textContent=String(err.message||'No se pudo completar la limpieza. Ejecuta la versión nueva supabase-reset-sin-clave.sql en Supabase.');
  }finally{
   btn.disabled=false;btn.textContent='Sí, borrar todas las hojas';
  }
