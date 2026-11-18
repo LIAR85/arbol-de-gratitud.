@@ -1,6 +1,5 @@
-// Configuración pública del navegador (NO pegar claves secretas ni service_role).
-// Sustituye estos dos valores y vuelve a publicar en Netlify.
+// Configuración pública de Supabase. Nunca incluyas claves secretas aquí.
 window.GRATITUD_CONFIG = {
-  url: "TU_PROJECT_URL",
-  publishableKey: "TU_PUBLISHABLE_KEY"
+  url: "https://mymtxeqkmnfdsyqrbvzj.supabase.co",
+  publishableKey: "sb_publishable_xwo921_7b8ZQ3WJvq-lY-Q_xCjGPPTG"
 };
