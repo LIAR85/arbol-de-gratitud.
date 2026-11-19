@@ -51,6 +51,8 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 @media(max-width:420px){.project-stats{right:10px;bottom:8px;font-size:10px;padding:6px 9px;gap:6px}}
 
 /* Proyección de prueba: árbol y todas las notas visibles, con lectura cómoda */
+.project-mobile-jump{display:none}
+@media(max-width:800px){.project .project-mobile-jump{position:absolute;display:block;left:14px;bottom:10px;background:transparent;color:#956a75;font:600 11px system-ui,sans-serif;border:0;padding:7px 10px;border-radius:12px}}
 .project-notes{display:none}
 .project .layout{display:grid;grid-template-columns:minmax(0,.83fr) minmax(0,1.17fr);gap:18px;align-items:stretch}
 .project .tree-card{height:calc(100dvh - 112px);min-height:0}
@@ -72,7 +74,7 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 .project-note-empty{padding:35px 18px;color:#9b8780;text-align:center;font:15px/1.6 Georgia,serif}
 .project-notes-foot{flex:none;padding:10px 18px;border-top:1px solid #eee4dd;color:#a28b83;font:11px system-ui,sans-serif;text-align:center}
 @media(max-width:1000px){.project-notes-grid{grid-template-columns:1fr}.project-note{min-height:95px}}
-@media(max-width:800px){.project .layout{display:flex;flex-direction:column;gap:12px}.project .tree-card{height:45dvh;min-height:310px;flex:none}.project .tree-stage{height:calc(100% - 85px)}.project .project-notes{height:60dvh;min-height:320px;flex:none}.project-notes-grid{grid-template-columns:1fr}.project-notes-head{padding:14px 16px}.project-notes-scroll{padding:12px}}
+@media(max-width:800px){.project .layout{display:flex;flex-direction:column;gap:12px}.project .tree-card{height:42dvh;min-height:290px;flex:none}.project .tree-stage{height:calc(100% - 85px)}.project .project-notes{height:auto;min-height:0;overflow:visible;flex:none}.project .project-notes-scroll{min-height:0;overflow:visible;overscroll-behavior:auto;padding:12px}.project-notes-grid{grid-template-columns:1fr}.project-note{min-height:0;padding:15px 14px}.project-note .project-note-text{font-size:16px;line-height:1.55}.project-notes-head{padding:16px}.project-notes-foot{padding:12px}.project .tree-caption{padding-bottom:44px}}
 @media(min-width:1250px){.project main{max-width:1500px}}
 </style>
 </head>
@@ -82,7 +84,7 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 <main>
 <section class="hero"><div class="kicker">UN MOMENTO PARA DAR GRACIAS</div><h1>Nuestro árbol de <em>gratitud</em></h1><p>Cada agradecimiento es una hoja que florece. Juntas hacemos visible todo lo bueno que Dios ha hecho.</p></section>
 <div class="layout">
-<section class="tree-card" aria-label="Árbol interactivo de gratitud"><div class="tree-top"><span>UN ÁRBOL, MUCHAS BENDICIONES</span><span class="counter" id="counter" aria-live="polite">0 HOJAS</span></div><div class="tree-stage"><svg id="tree" viewBox="0 0 600 540" role="img" aria-label="Árbol con copa frondosa, tronco, ramas y hojas de gratitud"></svg></div><div class="tree-caption" id="treeHint" aria-live="polite">Tu agradecimiento puede ser la primera hoja ♡</div><div class="project-stats" aria-live="polite" aria-label="Estado de lectura de las hojas"><span class="mini-leaf" aria-hidden="true">❧</span><span>Creadas <b id="statCreated">0</b></span><span class="stat-separator">·</span><span>Vistas <b id="statViewed">0</b></span></div></section>
+<section class="tree-card" aria-label="Árbol interactivo de gratitud"><div class="tree-top"><span>UN ÁRBOL, MUCHAS BENDICIONES</span><span class="counter" id="counter" aria-live="polite">0 HOJAS</span></div><div class="tree-stage"><svg id="tree" viewBox="0 0 600 540" role="img" aria-label="Árbol con copa frondosa, tronco, ramas y hojas de gratitud"></svg></div><div class="tree-caption" id="treeHint" aria-live="polite">Tu agradecimiento puede ser la primera hoja ♡</div><button type="button" class="project-mobile-jump" id="jumpNotes">Ver todos los mensajes ↓</button><div class="project-stats" aria-live="polite" aria-label="Estado de lectura de las hojas"><span class="mini-leaf" aria-hidden="true">❧</span><span>Creadas <b id="statCreated">0</b></span><span class="stat-separator">·</span><span>Vistas <b id="statViewed">0</b></span></div></section>
 <section class="project-notes" aria-label="Todos los agradecimientos para proyectar">
 <div class="project-notes-head"><div><div class="kicker">HOJAS DE GRATITUD</div><h2>Todos los <em style="color:var(--rose)">agradecimientos</em></h2></div><small id="projectNotesCount">0 mensajes</small></div>
 <div class="project-notes-scroll"><div id="projectNotesGrid" class="project-notes-grid"></div></div>
@@ -278,6 +280,7 @@ submit.disabled=false;submit.textContent='Colocar mi hoja en el árbol ♡';
 closeModals();document.getElementById('treeHint').textContent='¡Gracias! Tu hoja ya forma parte del árbol ♡';
 stage.scrollIntoView({behavior:'smooth',block:'center'});
 });
+document.getElementById('jumpNotes').addEventListener('click',()=>document.querySelector('.project-notes').scrollIntoView({behavior:'smooth',block:'start'}));
 const projectBtn=document.getElementById('projectBtn');
 projectBtn.addEventListener('click',()=>{const on=document.body.classList.toggle('project');projectBtn.textContent=on?'← Salir':'▣ Proyectar';projectBtn.setAttribute('aria-pressed',String(on));draw();if(on)window.scrollTo({top:0,behavior:'smooth'})});
 // Actualización de respaldo: cubre reconexiones y dispositivos suspendidos.
