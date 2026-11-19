@@ -49,6 +49,31 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 .project .project-stats{display:flex}
 .project .tree-caption{padding-bottom:42px}
 @media(max-width:420px){.project-stats{right:10px;bottom:8px;font-size:10px;padding:6px 9px;gap:6px}}
+
+/* Proyección de prueba: árbol y todas las notas visibles, con lectura cómoda */
+.project-notes{display:none}
+.project .layout{display:grid;grid-template-columns:minmax(0,.83fr) minmax(0,1.17fr);gap:18px;align-items:stretch}
+.project .tree-card{height:calc(100dvh - 112px);min-height:0}
+.project .tree-stage{max-width:100%;height:calc(100% - 85px);display:grid;place-items:center}
+.project .tree-stage svg{max-width:100%;max-height:100%;width:auto;height:100%}
+.project .project-notes{display:flex;flex-direction:column;min-height:0;height:calc(100dvh - 112px);background:var(--paper);border:1px solid var(--line);border-radius:23px;overflow:hidden;box-shadow:0 10px 32px #9474650a}
+.project-notes-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px 20px 13px;border-bottom:1px solid #eee4dd}
+.project-notes-head h2{font-weight:400;font-size:clamp(21px,2.1vw,29px);margin:5px 0 0}
+.project-notes-head small{font:11px system-ui,sans-serif;color:#a18b83;text-align:right}
+.project-notes-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:15px;scrollbar-color:#cfb0ae transparent}
+.project-notes-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.project-note{position:relative;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;background:#fffaf6;color:#66534d;border:1px solid #ebddd5;border-radius:15px;padding:14px 14px 16px;min-height:110px;width:100%;transition:background .15s,border-color .15s}
+.project-note:hover{border-color:#d0a8ab;background:#fcf4f1}
+.project-note .project-note-top{width:100%;display:flex;align-items:center;gap:7px;font:600 11px system-ui,sans-serif;color:#b47e8c}
+.project-note .project-note-top span:last-child{margin-left:auto;font-size:10px;color:#a7958b;font-weight:400}
+.project-note .project-note-text{font:15px/1.47 Georgia,serif;overflow-wrap:anywhere;white-space:normal}
+.project-note.is-read{background:#f0f4ee;border-color:#d5dfd4}
+.project-note.is-read .project-note-top{color:#708b7b}
+.project-note-empty{padding:35px 18px;color:#9b8780;text-align:center;font:15px/1.6 Georgia,serif}
+.project-notes-foot{flex:none;padding:10px 18px;border-top:1px solid #eee4dd;color:#a28b83;font:11px system-ui,sans-serif;text-align:center}
+@media(max-width:1000px){.project-notes-grid{grid-template-columns:1fr}.project-note{min-height:95px}}
+@media(max-width:800px){.project .layout{display:flex;flex-direction:column;gap:12px}.project .tree-card{height:45dvh;min-height:310px;flex:none}.project .tree-stage{height:calc(100% - 85px)}.project .project-notes{height:60dvh;min-height:320px;flex:none}.project-notes-grid{grid-template-columns:1fr}.project-notes-head{padding:14px 16px}.project-notes-scroll{padding:12px}}
+@media(min-width:1250px){.project main{max-width:1500px}}
 </style>
 </head>
 <body>
@@ -58,6 +83,11 @@ footer{text-align:center;font:10px system-ui,sans-serif;letter-spacing:.17em;col
 <section class="hero"><div class="kicker">UN MOMENTO PARA DAR GRACIAS</div><h1>Nuestro árbol de <em>gratitud</em></h1><p>Cada agradecimiento es una hoja que florece. Juntas hacemos visible todo lo bueno que Dios ha hecho.</p></section>
 <div class="layout">
 <section class="tree-card" aria-label="Árbol interactivo de gratitud"><div class="tree-top"><span>UN ÁRBOL, MUCHAS BENDICIONES</span><span class="counter" id="counter" aria-live="polite">0 HOJAS</span></div><div class="tree-stage"><svg id="tree" viewBox="0 0 600 540" role="img" aria-label="Árbol con copa frondosa, tronco, ramas y hojas de gratitud"></svg></div><div class="tree-caption" id="treeHint" aria-live="polite">Tu agradecimiento puede ser la primera hoja ♡</div><div class="project-stats" aria-live="polite" aria-label="Estado de lectura de las hojas"><span class="mini-leaf" aria-hidden="true">❧</span><span>Creadas <b id="statCreated">0</b></span><span class="stat-separator">·</span><span>Vistas <b id="statViewed">0</b></span></div></section>
+<section class="project-notes" aria-label="Todos los agradecimientos para proyectar">
+<div class="project-notes-head"><div><div class="kicker">HOJAS DE GRATITUD</div><h2>Todos los <em style="color:var(--rose)">agradecimientos</em></h2></div><small id="projectNotesCount">0 mensajes</small></div>
+<div class="project-notes-scroll"><div id="projectNotesGrid" class="project-notes-grid"></div></div>
+<div class="project-notes-foot">Selecciona una nota para leerla · las leídas cambian a verde salvia</div>
+</section>
 <div class="side"><section class="panel"><div class="kicker">UN MOMENTO PARA EL CORAZÓN</div><div class="symbol">♡</div><h2>¿Por qué le das <em>gracias a Dios</em> hoy?</h2><p>Por una persona, una respuesta, una nueva oportunidad o un pequeño milagro cotidiano.</p><button class="primary" id="writeBtn" type="button">♡ &nbsp; Escribir mi agradecimiento</button><div class="note">Tu mensaje será anónimo</div></section><section class="verse"><p>“Den gracias a Dios en toda situación.”</p><small>1 TESALONICENSES 5:18</small></section></div>
 </div>
 <footer>CRECIENDO JUNTAS EN GRATITUD · FRIENDS GIVING 2026<div class="disclaimer">Vista local: cada navegador guarda sus propios mensajes. Para compartir el mismo árbol entre celulares es necesaria la sincronización en tiempo real.</div></footer>
@@ -140,6 +170,39 @@ const make=(tag,attrs={},parent=svg)=>{const n=document.createElementNS(NS,tag);
 const PALETTE=['#b8818c','#d49ba2','#dec1a7','#bda588','#c98a92','#ecd0b2','#b6a48f','#e4b6b1'];
 const clusters=[[190,200,74,83],[270,148,87,91],[361,154,92,91],[437,210,75,76],[150,269,71,75],[238,261,105,104],[344,259,109,107],[451,289,75,75],[291,90,72,62]];
 const seeded=i=>{let v=Math.sin(i*129.837+42.3)*43758.5453;return v-Math.floor(v)};
+function openGratitude(msg,id){
+ markViewed(id);
+ document.getElementById('quote').textContent='“'+msg+'”';
+ showModal('readModal');
+}
+function renderProjectionNotes(){
+ const grid=document.getElementById('projectNotesGrid');
+ const count=document.getElementById('projectNotesCount');
+ count.textContent=messages.length+' '+(messages.length===1?'mensaje':'mensajes');
+ grid.replaceChildren();
+ if(!messages.length){
+   const empty=document.createElement('div');
+   empty.className='project-note-empty';
+   empty.textContent='El árbol aún está esperando su primera hoja de gratitud ♡';
+   grid.append(empty);return;
+ }
+ messages.forEach((msg,i)=>{
+  const id=messageKeys[i]||('fallback:'+i+':'+msg);
+  const read=viewed.has(id);
+  const btn=document.createElement('button');
+  btn.type='button';btn.className='project-note'+(read?' is-read':'');
+  btn.setAttribute('aria-label','Leer agradecimiento '+(i+1)+(read?', ya leído':''));
+  const top=document.createElement('div');top.className='project-note-top';
+  const leaf=document.createElement('span');leaf.textContent='❧';
+  const number=document.createElement('span');number.textContent='HOJA '+String(i+1).padStart(2,'0');
+  const status=document.createElement('span');status.textContent=read?'Leída':'Pendiente';
+  top.append(leaf,number,status);
+  const copy=document.createElement('span');copy.className='project-note-text';copy.textContent=msg;
+  btn.append(top,copy);
+  btn.addEventListener('click',()=>openGratitude(msg,id));
+  grid.append(btn);
+ });
+}
 function draw(){
 svg.replaceChildren();
 const defs=make('defs');const grad=make('linearGradient',{id:'trunkGradient',x1:'0',x2:'1',y1:'0',y2:'0'},defs);
@@ -177,11 +240,12 @@ const rot=Math.round(seeded(i+102)*100-50),g=make('g',{transform:'translate('+x.
 make('circle',{r:26,fill:'transparent'},g);
 make('path',{class:'mainleaf',d:'M0 20 C-33 -2 -22 -32 0 -36 C24 -28 30 0 0 20 Z',fill:alreadyViewed?'#8a9f91':PALETTE[(i*3+1)%PALETTE.length],stroke:'#fffaf5','stroke-width':2},g);
 make('path',{d:'M0 17 Q-2 -7 0 -28',fill:'none',stroke:'#fff8f0','stroke-width':1.5,'pointer-events':'none'},g);
-const open=()=>{markViewed(id);document.getElementById('quote').textContent='“'+msg+'”';showModal('readModal')};
+const open=()=>openGratitude(msg,id);
 g.addEventListener('click',open);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
 });
 document.getElementById('counter').textContent=messages.length+' '+(messages.length===1?'HOJA':'HOJAS');
 updateViewStats();
+if(document.body.classList.contains('project'))renderProjectionNotes();
 document.getElementById('treeHint').textContent=messages.length?'Toca una hoja para leer su agradecimiento ♡':'Tu agradecimiento puede ser la primera hoja ♡';
 }
 function showModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';if(id==='formModal')setTimeout(()=>document.getElementById('message').focus({preventScroll:true}),80)}
